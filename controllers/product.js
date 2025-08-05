@@ -135,6 +135,27 @@ const deleteProduct = async (req, res) => {
   }
 };
 
+// get products by seller ID (from params)
+const getProductsBySellerId = async (req, res) => {
+  const sellerId = req.params.id;
+
+  try {
+    const products = await Productmodel.find({ ownerId: sellerId });
+    
+    if (products.length === 0) {
+      return res.status(404).json({ message: "No products found for this seller" });
+    }
+
+    return res.status(200).json(products);
+  } catch (error) {
+    console.error("Error fetching seller's products:", error);
+    return res.status(500).json({
+      message: "Failed to fetch seller's products",
+      error: error.message,
+    });
+  }
+};
+
 
 
 module.exports = {
@@ -143,4 +164,5 @@ module.exports = {
   getProductById,
   updateProduct,
   deleteProduct,
+  getProductsBySellerId
 };
