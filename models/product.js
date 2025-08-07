@@ -40,4 +40,4 @@ const productSchema = mongoose.Schema({
     ref: "user"
   }
 });
-module.exports = mongoose.model("product", productSchema);
+module.exports = mongoose.model("Product", productSchema);
