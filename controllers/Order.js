@@ -14,7 +14,7 @@ const addOrder = async (req, res) => {
       isPaid
     } = req.body;
     //get cart
-    const cart = await cartModel.findOne({ user: userId }).populate("items.product");
+    const cart = await cartModel.findOne( { user: userId } ).populate("items.product");
     if (!cart) {
       return res.status(404).json({ message: "Cart not found for this user" });
     }
@@ -23,7 +23,8 @@ const addOrder = async (req, res) => {
     }
     const orderItems = cart.items.map(item => ({
       product: item.product._id,
-      quantity: item.quantity
+      quantity: item.quantity,
+  
     }));
     let shippingPrice=50;
     const Total_Order_Price = cart.totalPrice + shippingPrice;
@@ -34,10 +35,10 @@ const addOrder = async (req, res) => {
       ShippingPrice:shippingPrice,
       Total_Order_Price,
       paymentMethodType,
-      shippingAddress: {
-        address: shippingDetails,
+      ShippingAddress: {
+        details: shippingDetails,
         city,
-        phone: phoneNumber
+        PhoneNumber: phoneNumber
       },
       isPaid,
     });
@@ -66,13 +67,13 @@ const getOrder = async (req, res) => {
  const Id  = req.params.id;
   try {
 const order = await orderModel.findOne({user:Id})
-      // .populate({
-      //   path: "user",
-      //   select: "username -_id"
-      // })
+      .populate({
+        path: "user",
+        select: "username -_id",
+      })
       .populate({
         path: "items.product",
-        select: "title description price"
+        select: "title description price -_id"
       });
     if (!order) return res.status(404).json({ message: "Order not found" });
 
@@ -81,4 +82,86 @@ const order = await orderModel.findOne({user:Id})
     res.status(500).json({ message: "Error fetching cart", error: err.message });
   }
 };
-module.exports = { addOrder,getOrder };
+const updateOrder = async (req, res) => {
+  const { userId, productId, newQuantity, action = "update" } = req.body;
+
+  try {
+    const order = await orderModel.findOne({ user: userId });
+    if (!order) return res.status(404).json({ message: "Order not found" });
+
+    const product = await productModel.findById(productId);
+    if (!product) return res.status(404).json({ message: "Product not found" });
+
+    const index = order.items.findIndex(item => item.product.toString() === productId);
+
+    if (action === "remove") {
+      if (index === -1) return res.status(404).json({ message: "Product not in order" });
+      product.stock += order.items[index].quantity;
+      order.items.splice(index, 1);
+    }
+
+    else if (action === "update") {
+      if (index === -1) return res.status(404).json({ message: "Product not in order" });
+      product.stock += order.items[index].quantity;
+      if (newQuantity > product.stock)
+        return res.status(400).json({ message: `Only ${product.stock} available` });
+      order.items[index].quantity = newQuantity;
+      product.stock -= newQuantity;
+    }
+
+    else if (action === "add") {
+      if (index !== -1) return res.status(400).json({ message: "Product already in order" });
+      if (newQuantity > product.stock)
+        return res.status(400).json({ message: `Only ${product.stock} available` });
+      order.items.push({ product: productId, quantity: newQuantity });
+      product.stock -= newQuantity;
+    }
+
+    else return res.status(400).json({ message: "Invalid action" });
+
+    await product.save();
+    await order.populate("items.product");
+
+    const productPrice = order.items.reduce(
+      (sum, item) => sum + item.product.price * item.quantity, 0
+    );
+
+    const shippingPrice = 50;
+    order.productPrice = productPrice;
+    order.ShippingPrice = shippingPrice;
+    order.Total_Order_Price = productPrice + shippingPrice;
+
+    await order.save();
+
+    res.status(200).json({
+      message: "Order updated",
+      order,
+      prices: {
+        productPrice,
+        shippingPrice,
+        totalOrderPrice: order.Total_Order_Price
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Error", error: err.message });
+  }
+};
+const deleteOrder = async (req, res) => {
+  const { userId } = req.body;
+
+  try {
+    const order = await orderModel.findOne({ user: userId }).populate("items.product");
+    if (!order) return res.status(404).json({ message: "Order not found" });
+    for (const item of order.items) {
+      const product = item.product;
+      product.stock += item.quantity;
+      await product.save();
+    }
+    await orderModel.deleteOne({ _id: order._id });
+    res.status(200).json({ message: "Order deleted and stock updated successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Error deleting order", error: error.message });
+  }
+};
+
+module.exports = { addOrder,getOrder,updateOrder,deleteOrder };

@@ -25,7 +25,12 @@ const Userschema = mongoose.Schema({
     type: String,
     trim: true,
     required: true,
-    minLength: 6,
+    minlength: [6, "Password must be at least 6 characters long"],
+    validate: {
+      validator: function (value) {
+        return /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{6,}$/.test(value);
+      },
+    },
   },
   phonenumber: {
     type: String,
@@ -42,6 +47,7 @@ const Userschema = mongoose.Schema({
   gender: {
     type: String,
     trim: true,
+    Lowercase: true,
     enum: ["male", "female"],
     required: function () {
       return this.role === "seller";
@@ -50,6 +56,7 @@ const Userschema = mongoose.Schema({
   BankAccount: {
     type: String,
     trim: true,
+    match: /^[0-9]{14}$/,
     required: function () {
       return this.role === "seller";
     },
@@ -74,8 +81,7 @@ const Userschema = mongoose.Schema({
   resetTokenExpire: {
     type: Date,
   },
-}
-);
+});
 
 // hash password
 Userschema.pre("save", async function (next) {
