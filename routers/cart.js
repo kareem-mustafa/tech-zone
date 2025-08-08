@@ -5,7 +5,7 @@ const { addToCart,getCart,getAllCarts ,updateCart,removeItem,deleteCart} = requi
 router.post("/add", addToCart);
 router.get("/get", getAllCarts);
 router.get("/:id", getCart);
-router.patch("/update", updateCart);
+router.put("/update", updateCart);
 router.delete("/removeItem", removeItem);
 router.delete("/", deleteCart);
 

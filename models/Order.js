@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 const orderSchema = new Schema({
   user: {
     type: Schema.Types.ObjectId,
-    ref: "User",
+    ref: "user",
     required: true
   },
   items: [
@@ -23,7 +23,6 @@ const orderSchema = new Schema({
   ],
   Total_Order_Price: {
     type: Number,
-    required: true
   },
   ShippingAddress: {
     details: String,
@@ -32,6 +31,7 @@ const orderSchema = new Schema({
   },
   ShippingPrice: {
     type: Number,
+    default:50
   },
   paymentMethodType: {
     type: String,
@@ -55,4 +55,6 @@ const orderSchema = new Schema({
   }
 }, { timestamps: true });
 
-module.exports = mongoose.model('Order', orderSchema);
+const orderModel = mongoose.model('Order', orderSchema);
+module.exports = orderModel;
+

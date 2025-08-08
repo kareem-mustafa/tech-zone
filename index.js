@@ -20,19 +20,25 @@ mongoose
   });
 
 
+
 //multer
 app.use("/images", express.static(path.join(__dirname, 'images')));//بحتاجها عشان اعرف اعرض الصورة ف البراوزر
 
 //import routes
-const chatRoutes = require("./routers/chat");
 const userRoutes = require("./routers/user");
 const productRoutes = require("./routers/product");
 const wishlistRoutes = require("./routers/wishlist");
+const chatRoutes =require("./routers/chat")
+const cartRoutes =require("./routers/cart")
+const orderRoutes =require("./routers/order")
+
 //API path
 app.use("/wishlist", wishlistRoutes);
 app.use("/user", userRoutes);
 app.use("/product", productRoutes);
 app.use("/chat", chatRoutes);
+app.use("/cart", cartRoutes);
+app.use("/order",orderRoutes );
 app.listen(port, () => {
   console.log(`hello from port : ${port}`);
 });

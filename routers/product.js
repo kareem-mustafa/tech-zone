@@ -17,6 +17,7 @@ const { isSellerOrAdmin, isAdmin } = require("../middlewares/roles");
 
 
 router.post("/", auth, isSellerOrAdmin, upload.single("images"), addProduct);
+router.post("/", auth, isSellerOrAdmin, addProduct);
 router.get("/seller/:id", getProductsBySellerId);
 router.get("/", getAllProducts);
 router.get("/:id", getProductById);

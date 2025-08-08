@@ -3,10 +3,10 @@ const Product = require("../models/product");
 
 const addToCart = async (req, res) => {
   const { userId, productId, quantity } = req.body;
-  try {
+  try {   
     const product = await Product.findById(productId);
-    if (!product) return res.status(404).send({ message: "Product not found" });
-    let cart = await Cart.findOne({ user: userId });
+    if (!product) return res.status(404).send({ message: "product not found" });
+    let cart = await Cart.findOne( { user: userId } );
     if (!cart) {
       cart = new Cart({
         user: userId,
@@ -20,7 +20,6 @@ const addToCart = async (req, res) => {
       } else {
         cart.items.push({ product: productId, quantity });
       }
-
       cart.totalPrice = 0;
       for (const item of cart.items) {
         const prod = await Product.findById(item.product);
