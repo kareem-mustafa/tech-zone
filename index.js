@@ -1,4 +1,5 @@
 const express = require("express");
+const path = require("path");
 const app = express();
 app.use(express.json());
 
@@ -18,15 +19,16 @@ mongoose
     console.error("Error connecting to MongoDB:", err);
   });
 
+
+//multer
+app.use("/images", express.static(path.join(__dirname, 'images')));//بحتاجها عشان اعرف اعرض الصورة ف البراوزر
+
 //import routes
 const chatRoutes = require("./routers/chat");
 const userRoutes = require("./routers/user");
 const productRoutes = require("./routers/product");
 const wishlistRoutes = require("./routers/wishlist");
-const shippingRoutes = require("./routers/shipping");
-
 //API path
-app.use("/shipping", shippingRoutes);
 app.use("/wishlist", wishlistRoutes);
 app.use("/user", userRoutes);
 app.use("/product", productRoutes);

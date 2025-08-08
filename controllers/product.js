@@ -6,13 +6,14 @@ const addProduct = async (req, res) => {
   try {
     const exist = await Productmodel.findOne({ title, brand });
     if (exist) {
-      exist.stock += stock;
+      exist.stock += +stock;
       await exist.save();
       return res.status(200).json({
         message: "Stock updated",
         product: exist,
       });
     } else {
+      const imageUrl = req.file ? `/images/${req.file.filename}` : "";
       const newProduct = await Productmodel.create({
         title,
         brand,
@@ -20,6 +21,7 @@ const addProduct = async (req, res) => {
         description,
         price,
         category,
+        Images: { url: imageUrl },
         ownerId: req.user._id
       });
 
@@ -135,6 +137,27 @@ const deleteProduct = async (req, res) => {
   }
 };
 
+// get products by seller ID (from params)
+const getProductsBySellerId = async (req, res) => {
+  const sellerId = req.params.id;
+
+  try {
+    const products = await Productmodel.find({ ownerId: sellerId });
+    
+    if (products.length === 0) {
+      return res.status(404).json({ message: "No products found for this seller" });
+    }
+
+    return res.status(200).json(products);
+  } catch (error) {
+    console.error("Error fetching seller's products:", error);
+    return res.status(500).json({
+      message: "Failed to fetch seller's products",
+      error: error.message,
+    });
+  }
+};
+
 
 
 module.exports = {
@@ -143,4 +166,5 @@ module.exports = {
   getProductById,
   updateProduct,
   deleteProduct,
+  getProductsBySellerId
 };
