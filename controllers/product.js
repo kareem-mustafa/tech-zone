@@ -6,13 +6,14 @@ const addProduct = async (req, res) => {
   try {
     const exist = await Productmodel.findOne({ title, brand });
     if (exist) {
-      exist.stock += stock;
+      exist.stock += +stock;
       await exist.save();
       return res.status(200).json({
         message: "Stock updated",
         product: exist,
       });
     } else {
+      const imageUrl = req.file ? `/images/${req.file.filename}` : "";
       const newProduct = await Productmodel.create({
         title,
         brand,
@@ -20,6 +21,7 @@ const addProduct = async (req, res) => {
         description,
         price,
         category,
+        Images: { url: imageUrl },
         ownerId: req.user._id
       });
 
