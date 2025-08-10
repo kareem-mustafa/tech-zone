@@ -42,7 +42,11 @@ Thank you for trusting us and we wish you great sales`,
         price,
         category,
         Images: { url: imageUrl },
+
         ownerId: req.user._id,
+
+        ownerId: req.user._id
+
       });
 
       return res.status(201).json({
