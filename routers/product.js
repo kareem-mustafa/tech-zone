@@ -1,8 +1,9 @@
 const express = require("express");
-const multer = require("multer");
 const router = express.Router();
 const auth = require('../middlewares/auth');
 const upload = require("../middlewares/multer");
+
+
 
 const {
   addProduct,
@@ -15,9 +16,7 @@ const {
 
 const { isSellerOrAdmin, isAdmin } = require("../middlewares/roles");
 
-
 router.post("/", auth, isSellerOrAdmin, upload.single("images"), addProduct);
-router.post("/", auth, isSellerOrAdmin, addProduct);
 router.get("/seller/:id", getProductsBySellerId);
 router.get("/", getAllProducts);
 router.get("/:id", getProductById);

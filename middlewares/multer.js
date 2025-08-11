@@ -1,19 +1,16 @@
-const express = require("express");
-const router = express.Router();
-const multer = require("multer");
-const path = require("path");
+// middlewares/multer.js
+const multer = require('multer');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('../utils/cloudinary');
 
-
-const storage = multer.diskStorage({ //diskStorage is used to store files on the disktop on the file that i will create
-    destination: (req, file, cb) => { //destinition =>فين نخزن الصورة
-        cb(null, path.join(__dirname, '../images'))
+const storage = new CloudinaryStorage({
+    cloudinary,
+    params: {
+        folder: 'products', // اسم الفولدر على Cloudinary
+        allowed_formats: ['jpg', 'png', 'jpeg', 'webp'],
     },
-    filename: (req, file, cb) => {
-        cb(null, new Date().toISOString().replace(/:/g, '-') + file.originalname)//filename => اسم الصورةاي
-    }
 });
 
-const upload = multer({ storage: storage });
-
+const upload = multer({ storage });
 
 module.exports = upload;

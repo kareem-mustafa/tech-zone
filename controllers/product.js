@@ -6,14 +6,20 @@ const addProduct = async (req, res) => {
   try {
     const exist = await Productmodel.findOne({ title, brand });
     if (exist) {
-      exist.stock += +stock;
+      exist.stock += stock;
       await exist.save();
       return res.status(200).json({
         message: "Stock updated",
         product: exist,
       });
     } else {
-      const imageUrl = req.file ? `/images/${req.file.filename}` : "";
+      let imageUrl = "";
+
+      if (req.file) {
+        imageUrl = req.file.path;
+      }
+
+
       const newProduct = await Productmodel.create({
         title,
         brand,
@@ -21,8 +27,9 @@ const addProduct = async (req, res) => {
         description,
         price,
         category,
+        ownerId: req.user._id,
         Images: { url: imageUrl },
-        ownerId: req.user._id
+
       });
 
       return res.status(201).json({
@@ -108,19 +115,19 @@ const deleteProduct = async (req, res) => {
     }
 
     if (userRole === "admin") {
-        if (product.stock > 1) {
-      product.stock -= 1;
-      await product.save();
-      return res.status(200).json({ message: "Stock decreased by 1" });
-    } else {
-      await Productmodel.findByIdAndDelete(id);
-      return res.status(200).json({ message: "Product deleted completely by (admin)" });
+      if (product.stock > 1) {
+        product.stock -= 1;
+        await product.save();
+        return res.status(200).json({ message: "Stock decreased by 1" });
+      } else {
+        await Productmodel.findByIdAndDelete(id);
+        return res.status(200).json({ message: "Product deleted completely by (admin)" });
+      }
     }
-  }
     if (!product.ownerId || product.ownerId.toString() !== userId.toString()) {
       return res.status(403).json({ message: "Not authorized to delete this product" });
     }
-      if (product.stock > 1) {
+    if (product.stock > 1) {
       product.stock -= 1;
       await product.save();
       return res.status(200).json({ message: "Stock decreased by 1" });
@@ -143,7 +150,7 @@ const getProductsBySellerId = async (req, res) => {
 
   try {
     const products = await Productmodel.find({ ownerId: sellerId });
-    
+
     if (products.length === 0) {
       return res.status(404).json({ message: "No products found for this seller" });
     }
