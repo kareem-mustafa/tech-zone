@@ -57,6 +57,20 @@ const addOrder = async (req, res) => {
     }
 
     res.status(201).json({ message: "Order created successfully", order: newOrder });
+      await sendmail(
+      req.user.email,
+      "Order Confirmation",
+      `  hello:${req.user.name}
+      Product Details:
+         - 🏷 Name:  "${cart.items
+           .map((item) => item.product.title)
+           .join("   ,   ")}" has been confirmed
+         - 💰 Price: ${newOrder.Total_Order_Price} EGP.
+         - 📦 shipping address is ${newOrder.ShippingAddress.city}
+       `,
+      newOrder._id,
+      userId
+    );
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Failed to create order", error: err.message });
