@@ -1,6 +1,6 @@
+const { path } = require("pdfkit");
 const Cart = require("../models/cart");
 const Product = require("../models/product");
-
 const addToCart = async (req, res) => {
   const { userId, productId, quantity } = req.body;
   try {   
@@ -11,7 +11,7 @@ const addToCart = async (req, res) => {
       cart = new Cart({
         user: userId,
         items: [{ product: productId, quantity }],
-        totalPrice: product.price * quantity
+        totalPrice: product.price * quantity,
       });
     } else {
       const index = cart.items.findIndex(item => item.product.toString() === productId);
@@ -41,9 +41,10 @@ const getCart = async (req, res) => {
         path: "user",
         select: "username -_id"
       })
+      .populate("items.product")
       .populate({
-        path: "items.product",
-        select: "title description price"
+        path:"items.product.ownerId",
+        select:"username -_id"
       });
     if (!cart) return res.status(404).json({ message: "Cart not found" });
 

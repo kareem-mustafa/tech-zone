@@ -3,7 +3,7 @@ const notificationSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "user",
-    required: true,
+    // required: true,
   },
   orderId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -11,11 +11,11 @@ const notificationSchema = new mongoose.Schema({
   },
   message: {
     type: String,
-    required: true,
+
   },
   status: {
     type: String,
-    enum: ["confirmed", "pending", "rejected"],
+    enum: ["confirmed", "pending", "rejected", "verified"],
     default: "confirmed",
     required: true,
   },
@@ -23,6 +23,13 @@ const notificationSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  OTP:{
+    type:String
+  },
+  expiresAt: {
+  type: Date,
+  required: false
+}
 });
 const notificationmodel = mongoose.model("notification", notificationSchema);
 module.exports = notificationmodel ;

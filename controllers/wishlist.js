@@ -25,6 +25,7 @@ const getWishlist = async (req, res) => {
     const list = await Wishlistmodel.find({userId})
     .populate("userId","username")
     .populate("product","title")
+    .populate("product")
     res.status(200).json(list);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch wishlist", error: error.message });

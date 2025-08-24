@@ -7,7 +7,7 @@ const chatschema = mongoose.Schema({
   },
   message: {
     type: String,
-    required: true,
+    match: /^[A-Za-z\u0600-\u06FF.\-\s]*$/,
   },
   reply: {
     type: String,

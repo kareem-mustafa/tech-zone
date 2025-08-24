@@ -1,24 +1,48 @@
 const mongoose = require("mongoose");
+const slugify  =require("slugify")
+const validator = require("validator");
 const productSchema = mongoose.Schema({
   title: {
     type: String,
     required: [true, "Title is required"],
+    minlength: [3, "Title must be at least 3 characters long"],
+    maxlength: [50, "Title must be less than 50 characters"],
+    validate: {
+      validator: function (value) {
+        return /^[a-zA-Z0-9\s]+$/.test(value);
+      },
+    },
   },
   description: {
-    type: String,
+type: String,
+  required: [true, "Description is required"],
+  // minlength: [5, "Description must be at least 5 characters"],
+  // maxlength: [200, "Description cannot exceed 200 characters"],
+  // validate: {
+  //   validator: function (value) {
+  //     return /^[a-zA-Z0-9\s]+$/.test(value);
+  //   },
+  //   message: "Description can only contain letters, numbers and spaces"
+  // }
   },
   price: {
     type: Number,
     required: [true, "Price is required"],
   },
   Images: {
-    url: { type: String}
+     type: String,
+     match: /\.(jpg|jpeg|png|gif|bmp|webp|svg)$/i,
   },
   discount: {
     type: Number,
     default: 0,
     min: 0,
     max: 100,
+  },
+  slug:{
+    type: String,
+    unique: true,
+    lowercase: true,
   },
   createdAt: {
     type: Date,
@@ -37,7 +61,17 @@ const productSchema = mongoose.Schema({
   },
   ownerId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "user"
+    ref: "user",
   }
+  });
+  productSchema.pre("save", function (next) {
+  if (this.isModified("title")) {
+    this.slug = slugify(this.title, {
+      lower: true,
+      strict: true,
+      trim: true
+    });
+  }
+  next();
 });
 module.exports = mongoose.model("Product", productSchema);

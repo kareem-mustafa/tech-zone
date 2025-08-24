@@ -21,7 +21,18 @@ async function auth(req, res, next) {
       email: decoded.email,
       name: decoded.name,
     };
+    const hasCheckFields =
+  req.params.id ||
+  req.body?.id ||
+  req.body?.userId ||
+  req.body?.email;
 
+if (
+  hasCheckFields &&
+  req.user._id !== req.params.id && req.user.role !== "admin" && req.user._id !== req.body?.id &&
+  req.user._id !== req.body?.userId && req.user.email !== req.body?.email) {
+    return res.status(403).json({ message: "You are not allowed to access this account" });
+  }
     next();
   } catch (err) {
     res.status(401).json({ message: "Invalid token" });

@@ -5,8 +5,8 @@ const Userschema = mongoose.Schema({
   username: {
     type: String,
     trim: true,
-    required: true,
     minLength: 5,
+    maxLength: 40,
     match: /^[A-Za-z\u0600-\u06FF.\-\s]{5,40}$/,
   },
   email: {
@@ -14,8 +14,7 @@ const Userschema = mongoose.Schema({
     trim: true,
     required: true,
     unique: true,
-    match:
-      /^[a-zA-Z]{4,15}[0-9]{0,3}[-._]{0,1}[a-zA-Z]{0,15}(@)(gmail|yahoo|oulook|hotmail)(.com)/,
+    lowercase: true,
     validate: {
       validator: validator.isEmail,
       message: "Please provide a valid email address",
@@ -24,18 +23,28 @@ const Userschema = mongoose.Schema({
   password: {
     type: String,
     trim: true,
-    required: true,
-    minlength: [6, "Password must be at least 6 characters long"],
+    required: function () {
+      return !this.googleID;
+    },
+ 
+    minlength: 8,
     validate: {
       validator: function (value) {
-        return /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{6,}$/.test(value);
+        if (!this.isModified("password")) return true;
+        const passwordRegex =
+          /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/;
+        return passwordRegex.test(value);
       },
+      message:
+        "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character",
     },
   },
   phonenumber: {
     type: String,
     trim: true,
-    required: true,
+    required: function () {
+      return !this.googleID;
+    },
     match: /^(01)(0|1|2|5)[0-9]{8}$/,
   },
   role: {
@@ -44,10 +53,21 @@ const Userschema = mongoose.Schema({
     enum: ["user", "seller", "admin"],
     default: "user",
   },
+  googleID: {
+    type: String,
+  },
+  isVerified: {
+    type: Boolean,
+    default: false,
+  },
+  profileImage: {
+    type: String,
+    required: true,
+  },
   gender: {
     type: String,
     trim: true,
-    Lowercase: true,
+    lowercase: true,
     enum: ["male", "female"],
     required: function () {
       return this.role === "seller";
@@ -57,6 +77,12 @@ const Userschema = mongoose.Schema({
     type: String,
     trim: true,
     match: /^[0-9]{14}$/,
+    required: function () {
+      return this.role === "seller";
+    },
+  },
+  bankAccountImage: {
+    type: String,
     required: function () {
       return this.role === "seller";
     },
@@ -75,6 +101,14 @@ const Userschema = mongoose.Schema({
       return this.role === "seller";
     },
   },
+  storename: {
+    type: String,
+    trim: true,
+    required: function () {
+      return this.role === "seller";
+    },
+  },
+
   resetToken: {
     type: String,
   },
