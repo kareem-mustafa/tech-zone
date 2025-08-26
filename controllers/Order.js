@@ -108,7 +108,7 @@ if (cart.items.some(i => i.product.ownerId == userId)) {
 const getOrder = async (req, res) => {
   const Id = req.params.id;
   try {
-    const order = await orderModel.findOne({ user: Id })
+    const order = await orderModel.find({ user: Id })
       .populate({
         path: "user",
         select: "username -_id",
@@ -221,17 +221,21 @@ const updateOrder = async (req, res) => {
 };
 
 const deleteOrder = async (req, res) => {
-  const { userId } = req.body;
+  const { orderId } = req.params; // ناخد orderId من الـ URL
 
   try {
-    const order = await orderModel.findOne({ user: userId }).populate("items.product");
+    const order = await orderModel.findById(orderId).populate("items.product");
     if (!order) return res.status(404).json({ message: "Order not found" });
+
+    // تحديث المخزون
     for (const item of order.items) {
       const product = item.product;
       product.stock += item.quantity;
       await product.save();
     }
+
     await orderModel.deleteOne({ _id: order._id });
+
     res.status(200).json({ message: "Order deleted and stock updated successfully" });
   } catch (error) {
     res.status(500).json({ message: "Error deleting order", error: error.message });

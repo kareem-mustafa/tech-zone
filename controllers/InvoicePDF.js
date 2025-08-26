@@ -4,9 +4,9 @@ const {sendmailPDF} = require("../controllers/notification");
 const PDFDocument = require('pdfkit');
 const Order = require('../models/Order');
 
-async function generateInvoicePDF(userid, res) {
+async function generateInvoicePDF(orderId, res) {
   try {
-    const order = await Order.findOne({ user: userid })
+    const order = await Order.findById(orderId)
       .populate('user', 'username email')
       .populate('items.product', 'title price');
 

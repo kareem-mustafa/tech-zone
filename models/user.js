@@ -87,6 +87,13 @@ const Userschema = mongoose.Schema({
       return this.role === "seller";
     },
   },
+  isApproved: {
+    type: Boolean,
+    default: false,
+    required: function () {
+      return this.role === "seller";
+    },
+  },
   address: {
     type: String,
     trim: true,

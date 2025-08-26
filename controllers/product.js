@@ -172,10 +172,6 @@ const deleteProduct = async (req, res) => {
     if (userRole === "admin") {
       // stock decrease by admin
       if (product.stock > 1) {
-        product.stock -= 1;
-        await product.save();
-        return res.status(200).json({ message: "Stock decreased by 1" });
-      } else {
         await Productmodel.findOneAndDelete({ slug, ownerId: userId });
         return res
           .status(200)
@@ -190,10 +186,6 @@ const deleteProduct = async (req, res) => {
     }
     // stock decrease by seller
     if (product.stock > 1) {
-      product.stock -= 1;
-      await product.save();
-      return res.status(200).json({ message: "Stock decreased by 1" });
-    } else {
       await Productmodel.findOneAndDelete({ slug, ownerId: userId });
       return res
         .status(200)

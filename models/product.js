@@ -5,25 +5,11 @@ const productSchema = mongoose.Schema({
   title: {
     type: String,
     required: [true, "Title is required"],
-    minlength: [3, "Title must be at least 3 characters long"],
-    maxlength: [50, "Title must be less than 50 characters"],
-    validate: {
-      validator: function (value) {
-        return /^[a-zA-Z0-9\s]+$/.test(value);
-      },
-    },
   },
   description: {
 type: String,
   required: [true, "Description is required"],
-  // minlength: [5, "Description must be at least 5 characters"],
-  // maxlength: [200, "Description cannot exceed 200 characters"],
-  // validate: {
-  //   validator: function (value) {
-  //     return /^[a-zA-Z0-9\s]+$/.test(value);
-  //   },
-  //   message: "Description can only contain letters, numbers and spaces"
-  // }
+
   },
   price: {
     type: Number,

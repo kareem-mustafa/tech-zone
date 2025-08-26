@@ -30,6 +30,7 @@ const register = async (req, res) => {
       address,
       age,
       storename,
+  
     } = req.body;
     //check if user found
     const exist = await usermodel.findOne({ email });
@@ -66,6 +67,7 @@ const register = async (req, res) => {
       bankAccountImage: bankAccountImageUrl,
       profileImage: profileImageUrl,
       isVerified: false,
+      isApproved: false,
     });
     //save user in database
     const token = generateToken(newUser);
@@ -256,6 +258,38 @@ const updatepassword = async (req, res) => {
       .json({ message: "Cannot update password", error: err.message });
   }
 };
+const approveSeller = async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const { sellerId } = req.params;
+
+    const seller = await usermodel.findByIdAndUpdate(
+      sellerId,
+      { isApproved: true },
+      { new: true }
+    );
+
+    if (!seller) {
+      return res.status(404).json({ message: "Seller not found" });
+    }
+        await sendmail(
+      seller.email,
+      "Account Approved ",
+      `Hello ${seller.username}, your seller account has been approved. You can now start selling on our platform!`,
+      seller._id.toString()
+    );
+    res.status(200).json({
+      message: "Seller approved successfully",
+      seller,
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Error approving seller", error: err.message });
+  }
+};
+
 module.exports = {
   deleteUser,
   updateUser,
@@ -266,4 +300,5 @@ module.exports = {
   updatepassword,
   forgetpassword,
   resetpassword,
+  approveSeller
 };
