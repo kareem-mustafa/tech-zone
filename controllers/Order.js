@@ -221,7 +221,7 @@ const updateOrder = async (req, res) => {
 };
 
 const deleteOrder = async (req, res) => {
-  const { orderId } = req.params; // ناخد orderId من الـ URL
+  const { orderId } = req.params;
 
   try {
     const order = await orderModel.findById(orderId).populate("items.product");
@@ -230,15 +230,21 @@ const deleteOrder = async (req, res) => {
     // تحديث المخزون
     for (const item of order.items) {
       const product = item.product;
-      product.stock += item.quantity;
-      await product.save();
+      if (product) { //  تحقق الأول أن المنتج موجود
+        product.stock += item.quantity;
+        await product.save();
+      }
     }
 
     await orderModel.deleteOne({ _id: order._id });
 
-    res.status(200).json({ message: "Order deleted and stock updated successfully" });
+    res
+      .status(200)
+      .json({ message: "Order deleted and stock updated successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Error deleting order", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Error deleting order", error: error.message });
   }
 };
 const checkoutSession = async (req, res) => {

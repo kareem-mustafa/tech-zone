@@ -116,34 +116,31 @@ const updateProduct = async (req, res) => {
   const data = req.body;
   const userId = req.user._id;
   const userRole = req.user.role;
-  //define role
+
   try {
     let product;
+
     if (userRole === "admin") {
-      product = await Productmodel.findOne({ slug });
-    } else {
-      product = await Productmodel.findOne({ slug, ownerId: userId });
-      if (!product) {
+      // الادمن يقدر يحدث أي منتج بناءً على slug فقط
+      const updatedProduct = await Productmodel.findOneAndUpdate({ slug }, data, { new: true });
+      if (!updatedProduct) {
         return res.status(404).json({ message: "Product not found" });
       }
-      if (userRole === "admin") {
-        const updatedProduct = await Productmodel.findOneAndUpdate({ slug }, data, { new: true });
-        updatedProduct.Productmodel.save();
-        return res.status(200).json({ message: "Product updated by admin", product: updatedProduct });
+      return res.status(200).json({ message: "Product updated by admin", product: updatedProduct });
+    } else {
+      // البائع يحدث فقط منتجاته
+      product = await Productmodel.findOne({ slug, ownerId: userId });
+      if (!product) {
+        return res.status(404).json({ message: "Product not found or not authorized" });
       }
-      //sellers can update their own products
-      if (
-        !product.ownerId ||
-        product.ownerId.toString() !== userId.toString()
-      ) {
-        return res
-          .status(403)
-          .json({ message: "Not authorized to update this product" });
-      }
-      await Productmodel.findOneAndUpdate({ slug, ownerId: userId }, data, {
-        new: true,
-      });
-      return res.status(200).json({ message: "Product updated by seller" });
+
+      const updatedProduct = await Productmodel.findOneAndUpdate(
+        { slug, ownerId: userId },
+        data,
+        { new: true }
+      );
+
+      return res.status(200).json({ message: "Product updated by seller", product: updatedProduct });
     }
   } catch (err) {
     console.error("Update error:", err);
@@ -153,6 +150,7 @@ const updateProduct = async (req, res) => {
     });
   }
 };
+
 //delete the product by _ID function
 const deleteProduct = async (req, res) => {
   const { slug } = req.params;
