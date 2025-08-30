@@ -267,7 +267,7 @@ const userId = req.body.userid;
   line_items: [
     {
       price_data: {
-        currency: 'EGP',
+        currency: '$',
         product_data: {
           name: `Order #${order._id}`,
         },
