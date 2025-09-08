@@ -277,7 +277,7 @@ const userId = req.body.userid;
     },
   ],
   mode: 'payment',
-  success_url: `http://localhost:4200/order`,
+  success_url: `https://tech-zoone.vercel.app/order`,
   cancel_url: `${req.protocol}://${req.get('host')}/cancel`,
   customer_email: order.user.email || undefined,
   metadata: {
