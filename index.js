@@ -57,6 +57,10 @@ app.use("/order", orderRoutes);
 app.use("/", googleRoutes);
 app.use("/", InvoicePDF);
 
-app.listen(port, () => {
-  console.log(`hello from server port`);
+// app.listen(port, () => {
+//   console.log(`hello from server port`);
+// });
+app.get("/", (req, res) => {
+  res.send("hello from server");
 });
+module.exports = app;
