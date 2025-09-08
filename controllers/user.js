@@ -270,7 +270,7 @@ const approveSeller = async (req, res) => {
     const { sellerId } = req.params;
 
     const seller = await usermodel.findByIdAndUpdate(
-      sellerId,
+      sellerId, 
       { isApproved: true },
       { new: true }
     );
