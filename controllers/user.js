@@ -191,7 +191,7 @@ const forgetpassword = async (req, res) => {
     await user.save();
 //link reset password
 const userId=(user._id).toString();
-    const link = `http://localhost:4200/reset-password/${token}`;
+    const link = `https://tech-zoone.vercel.app/reset-password/${token}`;
     sendmail(
       user.email,
       "link reset password",
