@@ -7,7 +7,11 @@ const dotenv = require("dotenv");
 dotenv.config();
 app.use("/webhook", require("./routers/Webhook"));
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: 'https://tech-zoone.vercel.app',  // دومين الفرونت
+  methods: ['GET','POST','PUT','DELETE','OPTIONS'],
+  credentials: true
+}));
 const compression = require("compression");
 app.use(compression());
 
