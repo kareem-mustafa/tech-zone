@@ -13,7 +13,7 @@ const app = express();
 passport.use(new googlestrategy({
     clientID: process.env.ClientID,
     clientSecret: process.env.ClientSecret,
-    callbackURL: "http://localhost:5000/auth/google/callback"
+    callbackURL: "https://tech-zoone.vercel.app/auth/google/callback"
 },
 async (accessToken, refreshToken, profile, done) => {
     try {

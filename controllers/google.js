@@ -7,9 +7,9 @@ const googleLogin = passport.authenticate("google", {
 const googleCallback = (req, res, next) => {
   passport.authenticate(
     "google",
-    { session: false, failureRedirect: "http://localhost:4200/login" },
+    { session: false, failureRedirect: "https://tech-zoone.vercel.app/login" },
     async (err, user) => {
-      if (err || !user) return res.redirect("http://localhost:4200/home");
+      if (err || !user) return res.redirect("https://tech-zoone.vercel.app/home");
       try {
         const token = jwt.sign(
           {
@@ -23,7 +23,7 @@ const googleCallback = (req, res, next) => {
         );
         const encodedUser = encodeURIComponent(JSON.stringify(user));
         return res.redirect(
-          `http://localhost:4200/home?token=${token}&user=${encodedUser}`
+          `https://tech-zoone.vercel.app/home?token=${token}&user=${encodedUser}`
         );
       } catch (error) {
         console.error("Error generating JWT:", error);
