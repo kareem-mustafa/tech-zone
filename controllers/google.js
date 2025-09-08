@@ -23,7 +23,7 @@ const googleCallback = (req, res, next) => {
         );
         const encodedUser = encodeURIComponent(JSON.stringify(user));
         return res.redirect(
-          `https://tech-zoone.vercel.app/home?token=${token}&user=${encodedUser}`
+          `https://tech-zoone.vercel.app?token=${token}&user=${encodedUser}`
         );
       } catch (error) {
         console.error("Error generating JWT:", error);
