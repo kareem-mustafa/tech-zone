@@ -57,6 +57,10 @@ app.use("/order", orderRoutes);
 app.use("/auth", googleRoutes);
 app.use("/", InvoicePDF);
 
+app.get("/", (req, res) => {
+  res.send("hello from server");
+});
+
 if (process.env.NODE_ENV !== "production") {
   // محلي
   app.listen(port, () => {
