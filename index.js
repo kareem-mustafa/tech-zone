@@ -41,7 +41,7 @@ const productRoutes = require("./routers/product");
 const wishlistRoutes = require("./routers/wishlist");
 const chatRoutes = require("./routers/chat");
 const cartRoutes = require("./routers/cart");
-const orderRoutes = require("./routers/Order");
+const orderRoutes = require("./routers/order");
 const passport = require("./config/passport");
 const googleRoutes = require("./routers/google");
 const InvoicePDF = require("./routers/invoice");
@@ -57,10 +57,11 @@ app.use("/order", orderRoutes);
 app.use("/auth", googleRoutes);
 app.use("/", InvoicePDF);
 
-// app.listen(port, () => {
-//   console.log(`hello from server port`);
-// });
-app.get("/", (req, res) => {
-  res.send("hello from server");
-});
+if (process.env.NODE_ENV !== "production") {
+  // محلي
+  app.listen(port, () => {
+    console.log(`hello from server`);
+  });
+} 
+
 module.exports = app;
