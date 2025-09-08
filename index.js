@@ -14,7 +14,6 @@ app.use(cors({
 }));
 const compression = require("compression");
 app.use(compression());
-app.use(express.urlencoded({ extended: true }));
 //Encryption
 const mongoose = require("mongoose");
 const mongourl = process.env.MONGO_URL;
