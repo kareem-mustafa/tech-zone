@@ -54,7 +54,7 @@ app.use("/product", productRoutes);
 app.use("/chat", chatRoutes);
 app.use("/cart", cartRoutes);
 app.use("/order", orderRoutes);
-app.use("/", googleRoutes);
+app.use("/auth", googleRoutes);
 app.use("/", InvoicePDF);
 
 // app.listen(port, () => {
