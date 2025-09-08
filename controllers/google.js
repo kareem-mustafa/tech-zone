@@ -34,7 +34,7 @@ const googleCallback = (req, res, next) => {
 };
 
 const homePage = (req, res) => {
-  res.send("<a href='/auth/google'>Login with Google</a>");
+  res.send("<a href='auth/auth/google'>Login with Google</a>");
 };
 module.exports = {
   googleLogin,
