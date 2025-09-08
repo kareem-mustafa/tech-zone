@@ -33,10 +33,10 @@ const addToCart = async (req, res) => {
   }
 };
 const getCart = async (req, res) => {
-  const userId= req.params.id;
+  const id = req.params.id;
 
   try {
-    const cart = await Cart.findOne( {user:userId} )
+    const cart = await Cart.findOne( {user:id} )
       .populate({
         path: "user",
         select: "username -_id"
