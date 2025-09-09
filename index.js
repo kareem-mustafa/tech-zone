@@ -8,7 +8,7 @@ dotenv.config();
 app.use("/webhook", require("./routers/Webhook"));
 app.use(express.json());
 app.use(cors({
-  origin: 'https://tech-zoone.vercel.app',  // دومين الفرونت
+  origin: '*',  // دومين الفرونت
   methods: ['GET','POST','PUT','DELETE','OPTIONS'],
   credentials: true
 }));
