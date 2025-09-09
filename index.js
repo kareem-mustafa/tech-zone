@@ -1,4 +1,5 @@
 const express = require("express");
+const ensureDb = require("./middlewares/db");
 const path = require("path");
 const app = express();
 const cors = require("cors");
@@ -27,7 +28,7 @@ mongoose
   .catch((err) => {
     console.error("Error connecting to MongoDB:", err);
   });
-
+app.use(ensureDb);
 //multer
 app.use("/images", express.static(path.join(__dirname, "images"))); //بحتاجها عشان اعرف اعرض الصورة ف البراوزر
 
