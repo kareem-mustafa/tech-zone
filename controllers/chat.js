@@ -16,19 +16,26 @@ const send_message = async (req, res) => {
   try {
     // give a function to AI
     const products = await productmodel.find({});
-const productList = products.map(
-  (p) => `- ${p.title} (${p.price} EGP)`
-);
+    const productList = products.map((p) => `- ${p.title} (${p.price} EGP)`);
     const prompt = `
-            You are a smart assistant for adults who sells electronics such as cell phones, laptops, and headphones. 
-      Your job is to answer customer inquiries in Arabic and English, and provide information about shipping, 
-      products, prices, and offers upon request. Any question outside this website, don't answer.
-      not all productList just some
-      Products list:
-      random Products list (limited to 5):
-      ${productList}
+ You are a professional assistant for an online electronics store that sells cell phones, laptops, and headphones.  
+Your role is to answer customer inquiries in both Arabic and English.  
+You should only provide information about products, prices, shipping, and offers.  
+Do not answer any question outside the website’s scope.
+your answer should be in the same language as the customer's question, either Arabic or English.  
 
-      User: ${message}
+When replying to customers:  
+- Keep the response clear, polite, and professional.  
+- Do not use stars (*) or too many separators.  
+- Organize the response in a simple structured way (short intro, then key info or questions).  
+- If you need more details from the customer, ask them clearly and concisely.  
+- Always focus on helping the customer find the right product or service.  
+
+Available product list (show only a few items, not all):  
+${productList}
+
+User: ${message}
+
     `;
     //model of AI
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
