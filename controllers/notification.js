@@ -14,8 +14,8 @@ const sendmailPDF = async (to, subject, text, orderId, userId) => {
     const pdfFile = fs.readFileSync(pdfPath);
 
     await resend.emails.send({
-      from: "YourApp <onboarding@resend.dev>", // أو دومين موثق
-      to,
+      from: "onboarding@resend.dev", // لحد ما توثق دومينك
+      to: userId.email,
       subject,
       text,
       attachments: [
@@ -26,7 +26,6 @@ const sendmailPDF = async (to, subject, text, orderId, userId) => {
       ],
     });
 
-    // save notification
     await notificationmodel.create({
       userId,
       orderId,
@@ -34,7 +33,7 @@ const sendmailPDF = async (to, subject, text, orderId, userId) => {
       status: "confirmed",
     });
   } catch (err) {
-    console.error("faild to send email", err.message);
+    console.error("faild to send email", err);
     throw err;
   }
 };
@@ -43,7 +42,7 @@ const sendmailPDF = async (to, subject, text, orderId, userId) => {
 const sendmail = async (to, subject, text, orderId, userId) => {
   try {
     await resend.emails.send({
-      from: "YourApp <onboarding@resend.dev>",
+      from: "onboarding@resend.dev",
       to,
       subject,
       text,
@@ -56,7 +55,7 @@ const sendmail = async (to, subject, text, orderId, userId) => {
       status: "confirmed",
     });
   } catch (err) {
-    console.error("faild to send email", err.message);
+    console.error("faild to send email", err);
     throw err;
   }
 };
@@ -71,8 +70,8 @@ const sendOTP = async (to, userId) => {
   const OtpCode = generateOTP();
   try {
     await resend.emails.send({
-      from: "YourApp <onboarding@resend.dev>",
-      to,
+      from: "onboarding@resend.dev",
+      to:userId.email,
       subject: "Your OTP Code",
       text: `Your OTP code is ${OtpCode}`,
     });
@@ -85,7 +84,7 @@ const sendOTP = async (to, userId) => {
       expiresAt: Date.now() + 10 * 60 * 1000,
     });
   } catch (err) {
-    console.error("faild to send email", err.message);
+    console.error("faild to send email", err);
     throw err;
   }
 };
@@ -95,21 +94,16 @@ const resendOTP = async (req, res) => {
   try {
     const { userId } = req.params;
     const user = await usermodel.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-    if (user.isVerified) {
-      return res.status(400).json({ message: "User is already verified" });
-    }
+    if (!user) return res.status(404).json({ message: "User not found" });
+    if (user.isVerified) return res.status(400).json({ message: "User is already verified" });
 
-    // delete old OTP
     await notificationmodel.deleteMany({ userId });
 
     const OtpCode = generateOTP();
 
     await resend.emails.send({
-      from: "YourApp <onboarding@resend.dev>",
-      to: user.email,
+      from: "onboarding@resend.dev",
+      to: userId.email,
       subject: "Your OTP Code",
       text: `Your new OTP code is ${OtpCode}`,
     });
@@ -124,8 +118,8 @@ const resendOTP = async (req, res) => {
 
     res.status(200).json({ message: "OTP resent successfully" });
   } catch (err) {
-    console.error("faild to send email", err.message);
-    throw err;
+    console.error("faild to send email", err);
+    res.status(500).json({ error: "failed to resend OTP" });
   }
 };
 
@@ -137,12 +131,8 @@ const verify = async (req, res) => {
       .findOne({ userId, OTP: lastOTP })
       .sort({ createdAt: -1 });
 
-    if (!latset) {
-      return res.status(400).json({ message: "invalid OTP" });
-    }
-    if (Date.now() > latset.expiresAt) {
-      return res.status(400).json({ message: "OTP is expired" });
-    }
+    if (!latset) return res.status(400).json({ message: "invalid OTP" });
+    if (Date.now() > latset.expiresAt) return res.status(400).json({ message: "OTP is expired" });
 
     latset.status = "verified";
     await latset.save();
@@ -152,8 +142,8 @@ const verify = async (req, res) => {
 
     res.status(200).json({ message: "verified OTP" });
   } catch (err) {
-    console.error("Error verifying OTP", err.message);
-    throw err;
+    console.error("Error verifying OTP", err);
+    res.status(500).json({ error: "failed to verify OTP" });
   }
 };
 
