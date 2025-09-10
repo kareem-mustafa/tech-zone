@@ -1,5 +1,6 @@
 const nodemailer = require("nodemailer");
 const notificationmodel = require("../models/notification");
+const sendMail = require("../middlewares/sendmail");
 const usermodel = require("../models/user");
 const path = require('path');
 // create a server to send emails
