@@ -1,81 +1,79 @@
-const { Resend } = require("resend");
+const nodemailer = require("nodemailer");
 const notificationmodel = require("../models/notification");
+const sendMail = require("../middlewares/sendmail");
 const usermodel = require("../models/user");
-const path = require("path");
-const fs = require("fs");
-
-// إعداد Resend
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-// send email & create notification with PDF
+const path = require('path');
+// create a server to send emails
+const transport = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_ADMIN,
+    pass: process.env.EMAIL_PASSWORD,
+  },
+});
+// send email & create notification
 const sendmailPDF = async (to, subject, text, orderId, userId) => {
   try {
-    const pdfPath = path.join(__dirname, "..", "Invoices", `invoice_order_${orderId}.pdf`);
-    const pdfFile = fs.readFileSync(pdfPath);
-
-    await resend.emails.send({
-      from: "onboarding@resend.dev", // لحد ما توثق دومينك
-      to: userId.email,
+    await transport.sendMail({
+      from: process.env.EMAIL_ADMIN,
+      to,
       subject,
       text,
-      attachments: [
-        {
-          filename: `invoice_order_${orderId}.pdf`,
-          content: pdfFile.toString("base64"),
-        },
-      ],
+    attachments: [
+  {
+    filename: `invoice_order_${orderId}.pdf`,
+    path: path.join(__dirname, '..', 'Invoices', `invoice_order_${orderId}.pdf`)
+  }
+]
     });
-
+    
+    // save notification to database
     await notificationmodel.create({
-      userId,
-      orderId,
+      userId: userId,
+      orderId: orderId,
       message: text,
       status: "confirmed",
     });
   } catch (err) {
-    console.error("faild to send email", err);
+    console.error("faild to send email", err.message);
     throw err;
   }
 };
-
-// send email & create notification (بدون مرفقات)
 const sendmail = async (to, subject, text, orderId, userId) => {
   try {
-    await resend.emails.send({
-      from: "onboarding@resend.dev",
+    await transport.sendMail({
+      from: process.env.EMAIL_ADMIN,
       to,
       subject,
       text,
     });
-
+    // save notification to database
     await notificationmodel.create({
-      userId,
-      orderId,
+      userId: userId,
+      orderId: orderId,
       message: text,
       status: "confirmed",
     });
   } catch (err) {
-    console.error("faild to send email", err);
+    console.error("faild to send email", err.message);
     throw err;
   }
 };
-
 // Generate OTP
 const generateOTP = () => {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  return Math.floor(100000 + Math.random() * 900000).toString(); // رقم 6 خانات
 };
-
-// send otp
+// send otp to the user
 const sendOTP = async (to, userId) => {
   const OtpCode = generateOTP();
   try {
-    await resend.emails.send({
-      from: "onboarding@resend.dev",
-      to:userId.email,
+    await transport.sendMail({
+      from: process.env.EMAIL_ADMIN,
+      to,
       subject: "Your OTP Code",
-      text: `Your OTP code is ${OtpCode}`,
+      text: `Your OTP code ${OtpCode} `,
     });
-
+    // save OTP to database
     await notificationmodel.create({
       userId,
       OTP: `${OtpCode}`,
@@ -84,30 +82,31 @@ const sendOTP = async (to, userId) => {
       expiresAt: Date.now() + 10 * 60 * 1000,
     });
   } catch (err) {
-    console.error("faild to send email", err);
+    console.error("faild to send email", err.message);
     throw err;
   }
 };
-
-// resend OTP
+// resend OTP if the first is expired
 const resendOTP = async (req, res) => {
   try {
     const { userId } = req.params;
     const user = await usermodel.findById(userId);
-    if (!user) return res.status(404).json({ message: "User not found" });
-    if (user.isVerified) return res.status(400).json({ message: "User is already verified" });
-
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    if (user.isVerified) {
+      return res.status(400).json({ message: "User is already verified" });
+    }
+    // delete the old OTP
     await notificationmodel.deleteMany({ userId });
-
     const OtpCode = generateOTP();
-
-    await resend.emails.send({
-      from: "onboarding@resend.dev",
-      to: userId.email,
+    await transport.sendMail({
+      from: process.env.EMAIL_ADMIN,
+      to: user.email,
       subject: "Your OTP Code",
-      text: `Your new OTP code is ${OtpCode}`,
+      text: `Your new OTP code ${OtpCode} `,
     });
-
+    // save OTP to database
     await notificationmodel.create({
       userId: user._id,
       OTP: `${OtpCode}`,
@@ -115,36 +114,36 @@ const resendOTP = async (req, res) => {
       createdAt: Date.now(),
       expiresAt: Date.now() + 10 * 60 * 1000,
     });
-
     res.status(200).json({ message: "OTP resent successfully" });
   } catch (err) {
-    console.error("faild to send email", err);
-    res.status(500).json({ error: "failed to resend OTP" });
+    console.error("faild to send email", err.message);
+    throw err;
   }
 };
-
-// verify OTP
+// check otp is match or not
 const verify = async (req, res) => {
   const { userId, lastOTP } = req.body;
   try {
     const latset = await notificationmodel
       .findOne({ userId, OTP: lastOTP })
       .sort({ createdAt: -1 });
-
-    if (!latset) return res.status(400).json({ message: "invalid OTP" });
-    if (Date.now() > latset.expiresAt) return res.status(400).json({ message: "OTP is expired" });
-
+    if (!latset) {
+      return res.status(400).json({ message: "invalid OTP" });
+    }
+    if (Date.now() > latset.expiresAt) {
+      return res.status(400).json({ message: "OTP is expired" });
+    }
     latset.status = "verified";
     await latset.save();
-
+    // update status to be verified
     await usermodel.findByIdAndUpdate(userId, { isVerified: true });
+    // delet after compelete
     await notificationmodel.deleteOne({ userId });
 
     res.status(200).json({ message: "verified OTP" });
   } catch (err) {
-    console.error("Error verifying OTP", err);
-    res.status(500).json({ error: "failed to verify OTP" });
+    console.error("Error verifying OTP", err.message);
+    throw err;
   }
 };
-
-module.exports = { sendmail, sendOTP, resendOTP, verify, sendmailPDF };
+module.exports = { sendmail, sendOTP, resendOTP, verify,sendmailPDF };
