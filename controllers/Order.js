@@ -90,7 +90,7 @@ const addOrder = async (req, res) => {
     await sendmail(
       user.email,
       "Order Confirmation",
-      `  hello:${user.name}
+      `  hello:${req.user.name}
     Product Details:
        -  Name:  "${cart.items
          .map((item) => item.product.title)
