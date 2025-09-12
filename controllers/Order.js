@@ -41,7 +41,14 @@ const addOrder = async (req, res) => {
         message: "You cannot order your own product.",
       });
     }
-
+  if (
+  user.role === "admin" || 
+  cart.items.some((i) => i.product.userId == user._id)
+) {
+  return res.status(400).json({
+    message: "admins cannot order products.",
+  });
+}
     // التحقق من المخزون
     for (let item of cart.items) {
       if (item.quantity > item.product.stock) {
