@@ -4,6 +4,7 @@ const path = require("path");
 const app = express();
 const cors = require("cors");
 const session = require("express-session");
+const serverless = require("serverless-http");
 const dotenv = require("dotenv");
 dotenv.config();
 app.use("/webhook", require("./routers/Webhook"));
@@ -73,3 +74,4 @@ if (process.env.NODE_ENV !== "production") {
 } 
 
 module.exports = app;
+module.exports.handler = serverless(app); 

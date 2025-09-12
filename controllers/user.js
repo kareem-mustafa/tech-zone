@@ -72,6 +72,7 @@ const register = async (req, res) => {
     //save user in database
     const token = generateToken(newUser);
     await newUser.save();
+    await sendOTP(email, newUser._id);
     res.status(201).json({
       message: "User registered successfully",
       user: {
@@ -86,7 +87,6 @@ const register = async (req, res) => {
       token
     });
     //send Otp to verify email
-    await sendOTP(email, newUser._id);
   } catch (error) {
     res
       .status(500)
