@@ -1,8 +1,8 @@
 const nodemailer = require("nodemailer");
 const notificationmodel = require("../models/notification");
 const usermodel = require("../models/user");
-const path = require('path');
-const fs = require('fs');
+const path = require("path");
+const fs = require("fs");
 require("dotenv").config(); // اتأكد إنه معمول في مكان ما في المشروع (server.js أو هنا)
 
 // create transport
@@ -31,12 +31,17 @@ const generateOTP = () => {
 // sendmailPDF (كما عندك) - مع نفس التعامل مع الأخطاء
 const sendmailPDF = async (to, subject, text, orderId, userId) => {
   try {
-    const pdfPath = path.join(__dirname, '..', 'Invoices', `invoice_order_${orderId}.pdf`);
+    const pdfPath = path.join(
+      __dirname,
+      "..",
+      "Invoices",
+      `invoice_order_${orderId}.pdf`
+    );
     const attachments = [];
     if (fs.existsSync(pdfPath)) {
       attachments.push({
         filename: `invoice_order_${orderId}.pdf`,
-        path: pdfPath
+        path: pdfPath,
       });
     } else {
       console.warn("sendmailPDF: PDF not found at", pdfPath);
@@ -47,10 +52,13 @@ const sendmailPDF = async (to, subject, text, orderId, userId) => {
       to,
       subject,
       text,
-      attachments
+      attachments,
     });
 
-    console.log("sendmailPDF: sent:", info && info.messageId ? info.messageId : info);
+    console.log(
+      "sendmailPDF: sent:",
+      info && info.messageId ? info.messageId : info
+    );
 
     await notificationmodel.create({
       userId: userId,
@@ -73,7 +81,10 @@ const sendmail = async (to, subject, text, orderId, userId) => {
       subject,
       text,
     });
-    console.log("sendmail: sent:", info && info.messageId ? info.messageId : info);
+    console.log(
+      "sendmail: sent:",
+      info && info.messageId ? info.messageId : info
+    );
 
     // محاولة حفظ notification، لكن حتى لو فشلت نحافظ على نجاح الإرسال
     try {
@@ -101,7 +112,9 @@ const sendOTP = async (to, userId) => {
   }
   const OtpCode = generateOTP();
   try {
-    console.log(`sendOTP: sending OTP to=${to} userId=${userId} otp=${OtpCode}`);
+    console.log(
+      `sendOTP: sending OTP to=${to} userId=${userId} otp=${OtpCode}`
+    );
 
     const info = await transport.sendMail({
       from: process.env.EMAIL_ADMIN,
@@ -110,7 +123,10 @@ const sendOTP = async (to, userId) => {
       text: `Your OTP code is ${OtpCode}`,
     });
 
-    console.log("sendOTP: email sent:", info && info.messageId ? info.messageId : info);
+    console.log(
+      "sendOTP: email sent:",
+      info && info.messageId ? info.messageId : info
+    );
 
     // امسح أي OTPs قديمة قبل إضافة الجديد
     try {
@@ -154,10 +170,17 @@ const resendOTP = async (req, res) => {
     // حذف القديم وإنشاء جديد
     const OtpCode = await sendOTP(user.email, user._id);
 
-    res.status(200).json({ message: "OTP resent successfully", otp: process.env.NODE_ENV === "development" ? OtpCode : undefined });
+    res
+      .status(200)
+      .json({
+        message: "OTP resent successfully",
+        otp: process.env.NODE_ENV === "development" ? OtpCode : undefined,
+      });
   } catch (err) {
     console.error("resendOTP failed:", err);
-    res.status(500).json({ message: "failed to resend OTP", error: err.message });
+    res
+      .status(500)
+      .json({ message: "failed to resend OTP", error: err.message });
   }
 };
 

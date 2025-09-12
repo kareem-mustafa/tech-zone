@@ -9,7 +9,8 @@ const googleCallback = (req, res, next) => {
     "google",
     { session: false, failureRedirect: "https://tech-zoone.vercel.app/login" },
     async (err, user) => {
-      if (err || !user) return res.redirect("https://tech-zoone.vercel.app/home");
+      if (err || !user)
+        return res.redirect("https://tech-zoone.vercel.app/home");
       try {
         const token = jwt.sign(
           {

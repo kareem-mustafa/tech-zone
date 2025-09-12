@@ -14,18 +14,11 @@ const addProduct = async (req, res) => {
     if (exist) {
       exist.stock += stock;
       await exist.save();
-      res.status(200).json({
-        message: "Stock updated",
-        product: exist,
-      });
-      if (req.user.role === "seller") {
-        const user = await usermodel.findById(req.user._id);
-        //send email product updated
-        await sendmail(
-          req.user.email,
+      await sendmail(
+        req.user.email,
 
-          "Product updated Successfully",
-          `        
+        "Product updated Successfully",
+        `        
 hello :${req.user.name}
 We are pleased to inform you that your product has been successfully added to our store.
 Product Details:
@@ -38,9 +31,16 @@ Product Details:
 -  Price: ${exist.price} EGP
 -  NOTE:we will take 10% from your price to publish your product on our web site
 Thank you for trusting us and we wish you great sales`,
-          null,
-          req.user._id
-        );
+        null,
+        req.user._id
+      );
+      res.status(200).json({
+        message: "Stock updated",
+        product: exist,
+      });
+      if (req.user.role === "seller") {
+        const user = await usermodel.findById(req.user._id);
+        //send email product updated
       }
     } else {
       let imageUrl = "";
@@ -60,14 +60,10 @@ Thank you for trusting us and we wish you great sales`,
         Images: imageUrl,
       });
 
-      res.status(201).json("product add successfully");
-      if (req.user.role === "seller") {
-        const user = await usermodel.findById(req.user._id);
-        //send email product added
-        await sendmail(
-          req.user.email,
-          "Product added Successfully",
-          `        
+      await sendmail(
+        req.user.email,
+        "Product added Successfully",
+        `        
 hello :${req.user.name}
 We are pleased to inform you that your product has been successfully added to our store.
 Product Details:
@@ -80,9 +76,13 @@ Product Details:
 -  Price: ${newProduct.price} EGP
 NOTE:we are  take 10% from your price to publish your product on our web site
 Thank you for trusting us and we wish you great sales`,
-          null,
-          req.user._id
-        );
+        null,
+        req.user._id
+      );
+      res.status(201).json("product add successfully");
+      if (req.user.role === "seller") {
+        const user = await usermodel.findById(req.user._id);
+        //send email product added
       }
     }
   } catch (error) {
@@ -122,16 +122,24 @@ const updateProduct = async (req, res) => {
 
     if (userRole === "admin") {
       // الادمن يقدر يحدث أي منتج بناءً على slug فقط
-      const updatedProduct = await Productmodel.findOneAndUpdate({ slug }, data, { new: true });
+      const updatedProduct = await Productmodel.findOneAndUpdate(
+        { slug },
+        data,
+        { new: true }
+      );
       if (!updatedProduct) {
         return res.status(404).json({ message: "Product not found" });
       }
-      return res.status(200).json({ message: "Product updated by admin", product: updatedProduct });
+      return res
+        .status(200)
+        .json({ message: "Product updated by admin", product: updatedProduct });
     } else {
       // البائع يحدث فقط منتجاته
       product = await Productmodel.findOne({ slug, ownerId: userId });
       if (!product) {
-        return res.status(404).json({ message: "Product not found or not authorized" });
+        return res
+          .status(404)
+          .json({ message: "Product not found or not authorized" });
       }
 
       const updatedProduct = await Productmodel.findOneAndUpdate(
@@ -140,7 +148,12 @@ const updateProduct = async (req, res) => {
         { new: true }
       );
 
-      return res.status(200).json({ message: "Product updated by seller", product: updatedProduct });
+      return res
+        .status(200)
+        .json({
+          message: "Product updated by seller",
+          product: updatedProduct,
+        });
     }
   } catch (err) {
     console.error("Update error:", err);

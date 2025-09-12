@@ -1,7 +1,7 @@
 const usermodel = require("../models/user");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const { sendOTP,sendmail } = require("../controllers/notification");
+const { sendOTP, sendmail } = require("../controllers/notification");
 
 // Generate Token
 const generateToken = (user) => {
@@ -30,7 +30,6 @@ const register = async (req, res) => {
       address,
       age,
       storename,
-  
     } = req.body;
     //check if user found
     const exist = await usermodel.findOne({ email });
@@ -84,7 +83,7 @@ const register = async (req, res) => {
         bankAccountImage: newUser.bankAccountImage,
         profileImage: newUser.profileImage,
       },
-      token
+      token,
     });
     //send Otp to verify email
   } catch (error) {
@@ -97,7 +96,7 @@ const register = async (req, res) => {
 const login = async (req, res) => {
   const { email, password } = req.body;
   const User = await usermodel.findOne({ email });
-//compare password
+  //compare password
   if (!User || !(await bcrypt.compare(password, User.password))) {
     return res.status(401).json({ message: "Invalid email or password" });
   }
@@ -145,7 +144,6 @@ const updateUser = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-
     res.status(200).json({ message: "User updated successfully", user });
   } catch (err) {
     res.status(500).json({ message: "Cannot update user", error: err.message });
@@ -155,7 +153,7 @@ const updateUser = async (req, res) => {
 const getAllUser = async (req, res) => {
   const users = await usermodel.find();
   res.status(200).json(users);
-  if (!users){
+  if (!users) {
     res.status(404).json({ message: "No users found" });
   }
 };
@@ -189,15 +187,10 @@ const forgetpassword = async (req, res) => {
     user.resetToken = token;
     user.resetTokenExpire = Date.now() + 10 * 60 * 1000;
     await user.save();
-//link reset password
-const userId=(user._id).toString();
+    //link reset password
+    const userId = user._id.toString();
     const link = `https://tech-zoone.vercel.app/reset-password/${token}`;
-    sendmail(
-      user.email,
-      "link reset password",
-      link,
-      userId
-    );
+    sendmail(user.email, "link reset password", link, userId);
     res.status(200).json({ message: link });
   } catch (err) {
     res
@@ -238,7 +231,7 @@ const updatepassword = async (req, res) => {
   const { email, password, newpassword } = req.body;
 
   if (!email || !password || !newpassword) {
-    return res.status(400).json({ message:"fields are required" });
+    return res.status(400).json({ message: "fields are required" });
   }
   try {
     const user = await usermodel.findOne({ email });
@@ -270,7 +263,7 @@ const approveSeller = async (req, res) => {
     const { sellerId } = req.params;
 
     const seller = await usermodel.findByIdAndUpdate(
-      sellerId, 
+      sellerId,
       { isApproved: true },
       { new: true }
     );
@@ -278,7 +271,7 @@ const approveSeller = async (req, res) => {
     if (!seller) {
       return res.status(404).json({ message: "Seller not found" });
     }
-        await sendmail(
+    await sendmail(
       seller.email,
       "Account Approved ",
       `Hello ${seller.username}, your seller account has been approved. You can now start selling on our platform!`,
@@ -289,7 +282,9 @@ const approveSeller = async (req, res) => {
       seller,
     });
   } catch (err) {
-    res.status(500).json({ message: "Error approving seller", error: err.message });
+    res
+      .status(500)
+      .json({ message: "Error approving seller", error: err.message });
   }
 };
 
@@ -303,5 +298,5 @@ module.exports = {
   updatepassword,
   forgetpassword,
   resetpassword,
-  approveSeller
+  approveSeller,
 };
