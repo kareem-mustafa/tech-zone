@@ -39,17 +39,13 @@ const getCart = async (req, res) => {
 
   try {
     const cart = await Cart.findOne({ user: userId })
-      .populate({
-        path: "user",
-        select: "username -_id",
-      })
-      .populate("items.product")
+      .populate("user", "username")
+      .populate("items.product", "title price")
       .populate({
         path: "items.product.ownerId",
         select: "username -_id",
       });
     if (!cart) return res.status(404).json({ message: "Cart not found" });
-
     res.status(200).json(cart);
   } catch (err) {
     res
