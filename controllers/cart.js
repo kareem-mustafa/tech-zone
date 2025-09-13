@@ -38,7 +38,7 @@ const getCart = async (req, res) => {
   const userId = req.params.userId;
 
   try {
-    const cart = await Cart.findOne({ user: userId })
+    const cart = await Cart.find({ userId })
       .populate("user", "username")
       .populate("items.product", "title price")
       .populate({
