@@ -29,30 +29,20 @@ const generateOTP = () => {
 };
 
 // sendmailPDF (كما عندك) - مع نفس التعامل مع الأخطاء
-const sendmailPDF = async (to, subject, text, orderId, userId) => {
+const sendmailPDF = async (to, subject, text, pdfBuffer, orderId, userId) => {
   try {
-    const pdfPath = path.join(
-      __dirname,
-      "..",
-      "Invoices",
-      `invoice_order_${orderId}.pdf`
-    );
-    const attachments = [];
-    if (fs.existsSync(pdfPath)) {
-      attachments.push({
-        filename: `invoice_order_${orderId}.pdf`,
-        path: pdfPath,
-      });
-    } else {
-      console.warn("sendmailPDF: PDF not found at", pdfPath);
-    }
-
     const info = await transport.sendMail({
       from: process.env.EMAIL_ADMIN,
       to,
       subject,
       text,
-      attachments,
+      attachments: [
+        {
+          filename: `invoice_order_${orderId}.pdf`,
+          content: pdfBuffer,              // ✅ هنا الحل
+          contentType: "application/pdf",
+        },
+      ],
     });
 
     console.log(
@@ -71,6 +61,9 @@ const sendmailPDF = async (to, subject, text, orderId, userId) => {
     throw err;
   }
 };
+
+module.exports = { sendmailPDF };
+
 
 // sendmail (بدون مرفقات)
 const sendmail = async (to, subject, text, orderId, userId) => {
