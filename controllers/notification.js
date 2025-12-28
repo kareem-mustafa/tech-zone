@@ -97,42 +97,15 @@ const generateOTP = () => {
 const sendmailPDF = async (to, subject, text, pdfBuffer, orderId, userId) => {
   try {
     const html = emailTemplate({
-  title: "🧾 Your Invoice is Ready",
-  body: `
-    <p>Hello 👋</p>
-
-    <p>
-      Thank you for your purchase from <b>Tech Zone</b>.
-      Your invoice for order <b>#${orderId}</b> is ready.
-    </p>
-
-    <div style="
-      margin: 30px 0;
-      padding: 20px;
-      border: 1px dashed #0d6efd;
-      border-radius: 8px;
-      text-align: center;
-      background: #f8faff;
-    ">
-      <p style="font-size:16px; margin-bottom:15px;">
-        📄 Invoice PDF Attached
-      </p>
-
-      <p style="font-size:13px; color:#555;">
-        Please open the attached PDF to view or download your invoice.
-      </p>
-    </div>
-
-    <p>
-      If you have any questions, feel free to contact our support team.
-    </p>
-
-    <p>
-      <b>Tech Zone Team</b> 💙
-    </p>
-  `,
-});
-
+      title: "🧾 Your Invoice is Ready",
+      body: `
+        <p>Hello 👋</p>
+        <p>Thank you for your purchase!</p>
+        <p>Your invoice for <b>Order #${orderId}</b> is attached to this email.</p>
+        <p>If you have any questions, feel free to contact our support team.</p>
+        <p>We appreciate your trust in <b>Tech Zone</b>.</p>
+      `,
+    });
 
     const info = await transport.sendMail({
       from: `"Tech Zone" <${process.env.EMAIL_ADMIN}>`,
