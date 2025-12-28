@@ -4,6 +4,71 @@ const usermodel = require("../models/user");
 const path = require("path");
 const fs = require("fs");
 require("dotenv").config(); // اتأكد إنه معمول في مكان ما في المشروع (server.js أو هنا)
+const emailTemplate = ({ title, body, footer }) => `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    body {
+      background-color: #f4f6f8;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    .container {
+      max-width: 600px;
+      background: #ffffff;
+      margin: auto;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .header {
+      background: #0d6efd;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      font-size: 22px;
+      font-weight: bold;
+    }
+    .content {
+      padding: 30px;
+      color: #333;
+      line-height: 1.6;
+      font-size: 15px;
+    }
+    .button {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 12px 25px;
+      background: #0d6efd;
+      color: #fff !important;
+      text-decoration: none;
+      border-radius: 5px;
+      font-weight: bold;
+    }
+    .footer {
+      background: #f1f1f1;
+      padding: 15px;
+      text-align: center;
+      font-size: 12px;
+      color: #777;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">${title}</div>
+    <div class="content">
+      ${body}
+    </div>
+    <div class="footer">
+      ${footer || "© Tech Zone – All rights reserved"}
+    </div>
+  </div>
+</body>
+</html>
+`;
 
 // create transport
 const transport = nodemailer.createTransport({
@@ -31,28 +96,36 @@ const generateOTP = () => {
 // sendmailPDF (كما عندك) - مع نفس التعامل مع الأخطاء
 const sendmailPDF = async (to, subject, text, pdfBuffer, orderId, userId) => {
   try {
+    const html = emailTemplate({
+      title: "🧾 Your Invoice is Ready",
+      body: `
+        <p>Hello 👋</p>
+        <p>Thank you for your purchase!</p>
+        <p>Your invoice for <b>Order #${orderId}</b> is attached to this email.</p>
+        <p>If you have any questions, feel free to contact our support team.</p>
+        <p>We appreciate your trust in <b>Tech Zone</b>.</p>
+      `,
+    });
+
     const info = await transport.sendMail({
-      from: process.env.EMAIL_ADMIN,
+      from: `"Tech Zone" <${process.env.EMAIL_ADMIN}>`,
       to,
       subject,
-      text,
+      html,
       attachments: [
         {
           filename: `invoice_order_${orderId}.pdf`,
-          content: pdfBuffer,              // ✅ هنا الحل
+          content: pdfBuffer,
           contentType: "application/pdf",
         },
       ],
     });
 
-    console.log(
-      "sendmailPDF: sent:",
-      info && info.messageId ? info.messageId : info
-    );
+    console.log("sendmailPDF: sent:", info.messageId);
 
     await notificationmodel.create({
-      userId: userId,
-      orderId: orderId,
+      userId,
+      orderId,
       message: text,
       status: "confirmed",
     });
@@ -62,91 +135,82 @@ const sendmailPDF = async (to, subject, text, pdfBuffer, orderId, userId) => {
   }
 };
 
-module.exports = { sendmailPDF };
-
 
 // sendmail (بدون مرفقات)
 const sendmail = async (to, subject, text, orderId, userId) => {
   try {
+    const html = emailTemplate({
+      title: "📦 Order Update",
+      body: `
+        <p>Hello 👋</p>
+        <p>${text}</p>
+        <p>Thank you for shopping with <b>Tech Zone</b>.</p>
+      `,
+    });
+
     const info = await transport.sendMail({
-      from: process.env.EMAIL_ADMIN,
+      from: `"Tech Zone" <${process.env.EMAIL_ADMIN}>`,
       to,
       subject,
-      text,
+      html,
     });
-    console.log(
-      "sendmail: sent:",
-      info && info.messageId ? info.messageId : info
-    );
 
-    // محاولة حفظ notification، لكن حتى لو فشلت نحافظ على نجاح الإرسال
-    try {
-      await notificationmodel.create({
-        userId: userId,
-        orderId: orderId,
-        message: text,
-        status: "confirmed",
-      });
-    } catch (dbErr) {
-      console.error("sendmail: failed to save notification to DB:", dbErr);
-    }
+    console.log("sendmail: sent:", info.messageId);
+
+    await notificationmodel.create({
+      userId,
+      orderId,
+      message: text,
+      status: "confirmed",
+    });
   } catch (err) {
     console.error("sendmail failed:", err);
     throw err;
   }
 };
 
+
 // sendOTP (مُحسّن) — الآن يحذف OTPs القديمة، يسجل لوج، ويرجع الـ OTP
 const sendOTP = async (to, userId) => {
-  if (!to) {
-    const err = new Error("sendOTP: recipient email (to) is required");
-    console.error(err);
-    throw err;
-  }
   const OtpCode = generateOTP();
-  try {
-    console.log(
-      `sendOTP: sending OTP to=${to} userId=${userId} otp=${OtpCode}`
-    );
 
-    const info = await transport.sendMail({
-      from: process.env.EMAIL_ADMIN,
-      to,
-      subject: "Your OTP Code",
-      text: `Your OTP code is ${OtpCode}`,
+  try {
+    const html = emailTemplate({
+      title: "🔐 OTP Verification",
+      body: `
+        <p>Hello 👋</p>
+        <p>Use the following OTP code to verify your account:</p>
+        <h2 style="text-align:center; letter-spacing:3px;">${OtpCode}</h2>
+        <p>This code is valid for <b>10 minutes</b>.</p>
+        <p>If you didn’t request this, please ignore this email.</p>
+      `,
     });
 
-    console.log(
-      "sendOTP: email sent:",
-      info && info.messageId ? info.messageId : info
-    );
+    const info = await transport.sendMail({
+      from: `"Tech Zone Security" <${process.env.EMAIL_ADMIN}>`,
+      to,
+      subject: "Your OTP Code",
+      html,
+    });
 
-    // امسح أي OTPs قديمة قبل إضافة الجديد
-    try {
-      if (userId) await notificationmodel.deleteMany({ userId });
-    } catch (delErr) {
-      console.error("sendOTP: failed to delete old OTPs (non-fatal):", delErr);
-    }
+    console.log("sendOTP: email sent:", info.messageId);
 
-    // save OTP to database (non-fatal if DB fails — الإيميل أهم)
-    try {
-      await notificationmodel.create({
-        userId,
-        OTP: `${OtpCode}`,
-        status: "pending",
-        createdAt: Date.now(),
-        expiresAt: Date.now() + 10 * 60 * 1000,
-      });
-    } catch (dbErr) {
-      console.error("sendOTP: failed to save OTP to DB (non-fatal):", dbErr);
-    }
+    await notificationmodel.deleteMany({ userId });
+    await notificationmodel.create({
+      userId,
+      OTP: OtpCode,
+      status: "pending",
+      createdAt: Date.now(),
+      expiresAt: Date.now() + 10 * 60 * 1000,
+    });
 
-    return OtpCode; // مفيد للاختبارات أو للرد على ال API
+    return OtpCode;
   } catch (err) {
-    console.error("sendOTP: failed to send email:", err);
+    console.error("sendOTP failed:", err);
     throw err;
   }
 };
+
 
 // resendOTP (كمسار Express) — زي عندك لكن مع تحسين اللوج
 const resendOTP = async (req, res) => {
