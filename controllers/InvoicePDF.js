@@ -23,7 +23,7 @@ async function generateInvoicePDF(orderId, res) {
           order.user.email,
           `Invoice for your order #${order._id}`,
           `Hello ${order.user.username},`,
-          pdfBuffer, // ✅ البافر
+          pdfBuffer,
           order._id,
           order.user._id
         );
